@@ -69,10 +69,14 @@ jobs:
         run: cmake --build build --config Release --parallel
 
       - name: Render tests (all presets)
-        run: .\build\RC2Tests_artefacts\Release\RC2Tests.exe
+        shell: cmd
+        run: |
+          dir build\RC2Tests_artefacts\Release
+          build\RC2Tests_artefacts\Release\RC2Tests.exe
 
       - name: Load VST3 through the JUCE host
-        run: .\build\RC2Tests_artefacts\Release\RC2Tests.exe --host "build\RecklessChronos2_artefacts\Release\VST3\Reckless Chronos 2.vst3"
+        shell: cmd
+        run: build\RC2Tests_artefacts\Release\RC2Tests.exe --host "build\RecklessChronos2_artefacts\Release\VST3\Reckless Chronos 2.vst3"
 
       - name: Package
         shell: pwsh

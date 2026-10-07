@@ -264,7 +264,27 @@ int hostTest (const juce::String& path)
 }
 } // namespace
 
+static int runTests (int argc, char** argv);
+
 int main (int argc, char** argv)
+{
+    std::cout << "RC2Tests " << juce::SystemStats::getOperatingSystemName() << std::endl;
+    try
+    {
+        return runTests (argc, argv);
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << "EXCEPTION: " << e.what() << std::endl;
+    }
+    catch (...)
+    {
+        std::cout << "UNKNOWN EXCEPTION" << std::endl;
+    }
+    return 2;
+}
+
+static int runTests (int argc, char** argv)
 {
     juce::ScopedJuceInitialiser_GUI gui;
     juce::File wavDir, loudnessFile;
@@ -288,6 +308,7 @@ int main (int argc, char** argv)
     RecklessChronosProcessor p;
     p.setPlayConfigDetails (0, 2, kSr, kBlock);
     p.prepareToPlay (kSr, kBlock);
+    std::cout << "Loaded " << p.presets.programs().size() << " programs, " << p.presets.combis().size() << " combis" << std::endl;
 
     int failures = 0;
     for (auto& e : p.presets.parseErrors())
