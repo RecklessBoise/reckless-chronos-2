@@ -46,9 +46,9 @@ juce::String macroText (int engine, int macro, double v)
             break;
         case engFM:
         {
-            static const float ratios[] = { 0.5f, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14 };
+            static const float ratios[] = { 0.5f, 1.0f, 1.41f, 2.0f, 2.76f, 3.0f, 3.5f, 4.0f, 5.0f, 5.4f, 6.0f, 7.0f, 7.13f, 8.0f, 9.0f, 11.0f, 14.0f };
             if (macro == 0) return "ALGO " + juce::String (pickIndex (x, 8) + 1);
-            if (macro == 1 || macro == 3) return "x" + juce::String (ratios[pickIndex (x, 17)], 1);
+            if (macro == 1 || macro == 3) return "x" + juce::String (ratios[pickIndex (x, 17)], 2);
             break;
         }
         case engOrgan:
@@ -283,7 +283,7 @@ public:
         addChildComponent (*lfoWave);
         addChildComponent (*voiceMode);
         for (auto* nm : { "RATE", "DELAY", ">PITCH", ">FILTER", ">AMP", "WHL VIB", "WHL CUT", "AT VIB" }) addKnob (lfoKnobs, nm);
-        for (auto* nm : { "GLIDE", "TRANSP", "FINE", "BEND" }) addKnob (pitchKnobs, nm);
+        for (auto* nm : { "GLIDE", "TRANSP", "FINE", "BEND", "PITCH EG" }) addKnob (pitchKnobs, nm);
 
         setSub (0);
     }
@@ -306,8 +306,8 @@ public:
         voiceMode->attach (s, id (tpVoiceMode));
         const int lk[] = { tpLfoRate, tpLfoDelay, tpLfoPitch, tpLfoFilter, tpLfoAmp, tpWheelVib, tpWheelCut, tpAtVib };
         for (int i = 0; i < 8; ++i) lfoKnobs[i]->attach (s, id (lk[i]));
-        const int pk[] = { tpGlide, tpTranspose, tpFine, tpPbRange };
-        for (int i = 0; i < 4; ++i) pitchKnobs[i]->attach (s, id (pk[i]));
+        const int pk[] = { tpGlide, tpTranspose, tpFine, tpPbRange, tpPitchEg };
+        for (int i = 0; i < 5; ++i) pitchKnobs[i]->attach (s, id (pk[i]));
         updateMacroLabels();
     }
 
@@ -394,7 +394,7 @@ private:
         voiceMode->setVisible (s == 2);
         for (auto* k : lfoKnobs) k->setVisible (s == 2);
         for (auto* k : pitchKnobs) k->setVisible (s == 2);
-        subTabs[s]->setToggleState (true, juce::dontSendNotification);
+        for (int i = 0; i < subTabs.size(); ++i) subTabs[i]->setToggleState (i == s, juce::dontSendNotification);
     }
 
     RecklessChronosProcessor& proc;
@@ -754,7 +754,7 @@ void Screen::setEditTimbre (int t)
 {
     if (proc.mode.load() != (int) Mode::Combi) t = 0;
     proc.editTimbre = t;
-    timbreButtons[t]->setToggleState (true, juce::dontSendNotification);
+    for (int i = 0; i < timbreButtons.size(); ++i) timbreButtons[i]->setToggleState (i == t, juce::dontSendNotification);
     edit->setTimbre (t);
     fx->setTimbre (t);
     if (onEditTimbreChanged) onEditTimbreChanged();
@@ -768,7 +768,7 @@ void Screen::showPage (int index)
     mixer->setVisible (index == 2);
     fx->setVisible (index == 3);
     arp->setVisible (index == 4);
-    tabs[index]->setToggleState (true, juce::dontSendNotification);
+    for (int i = 0; i < tabs.size(); ++i) tabs[i]->setToggleState (i == index, juce::dontSendNotification);
     if (index == 2) mixer->refresh();
 }
 

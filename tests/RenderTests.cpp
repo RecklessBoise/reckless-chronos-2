@@ -31,6 +31,7 @@ struct Stats
 };
 
 constexpr double kSr = 48000.0;
+std::vector<juce::String> loudnessRows; // "kind,name,rms,peak"
 constexpr int kBlock = 256;
 
 void renderSeconds (juce::AudioProcessor& p, double secs, juce::MidiBuffer& firstBlockMidi, Stats& st,
@@ -92,6 +93,8 @@ bool playOne (RecklessChronosProcessor& p, const juce::String& label, bool combi
     if (held.peak > 1.0f) { ok = false; why << " peak " << held.peak; }
     if (! ok)
         std::cout << "  FAIL " << label << ":" << why << std::endl;
+    loudnessRows.push_back (juce::String (combi ? "C" : "P") + "," + label.fromFirstOccurrenceOf (" ", false, false)
+                            + "," + juce::String (held.rms(), 5) + "," + juce::String (held.peak, 4));
 
     if (cap != nullptr)
     {
@@ -264,12 +267,14 @@ int hostTest (const juce::String& path)
 int main (int argc, char** argv)
 {
     juce::ScopedJuceInitialiser_GUI gui;
-    juce::File wavDir;
+    juce::File wavDir, loudnessFile;
     bool checkPitch = false;
     for (int i = 1; i < argc - 1; ++i)
     {
         if (juce::String (argv[i]) == "--host") return hostTest (argv[i + 1]);
         if (juce::String (argv[i]) == "--snapshot") return snapshot (argv[i + 1], i + 2 < argc ? juce::String (argv[i + 2]) : juce::String());
+        if (juce::String (argv[i]) == "--loudness")
+            loudnessFile = juce::File::getCurrentWorkingDirectory().getChildFile (argv[i + 1]);
         if (juce::String (argv[i]) == "--wav")
         {
             wavDir = juce::File::getCurrentWorkingDirectory().getChildFile (argv[i + 1]);
@@ -325,6 +330,9 @@ int main (int argc, char** argv)
     juce::MemoryBlock mb;
     p.getStateInformation (mb);
     p.setStateInformation (mb.getData(), (int) mb.getSize());
+
+    if (loudnessFile != juce::File())
+        loudnessFile.replaceWithText (juce::StringArray (loudnessRows.data(), (int) loudnessRows.size()).joinIntoString ("\n"));
 
     std::cout << "Programs: " << progs.size() << "  Combis: " << combs.size() << std::endl;
     for (auto& [c, n] : perCat) std::cout << "  " << c << ": " << n << std::endl;

@@ -296,6 +296,7 @@ void InstrumentBody::resized()
 RecklessChronosEditor::RecklessChronosEditor (RecklessChronosProcessor& p)
     : AudioProcessorEditor (p), proc (p), body (p)
 {
+    const float initialScale = juce::jlimit (0.5f, 2.0f, proc.uiScale);
     setLookAndFeel (&lnf);
     addAndMakeVisible (body);
     body.setSize (InstrumentBody::kWidth, InstrumentBody::kHeight);
@@ -308,8 +309,9 @@ RecklessChronosEditor::RecklessChronosEditor (RecklessChronosProcessor& p)
     setResizeLimits (InstrumentBody::kWidth / 2, InstrumentBody::kHeight / 2, InstrumentBody::kWidth * 2, InstrumentBody::kHeight * 2);
     if (auto* c = getConstrainer())
         c->setFixedAspectRatio ((double) InstrumentBody::kWidth / (double) InstrumentBody::kHeight);
-    const float s = juce::jlimit (0.5f, 2.0f, proc.uiScale);
-    setSize ((int) std::round (InstrumentBody::kWidth * s), (int) std::round (InstrumentBody::kHeight * s));
+    setSize ((int) std::round (InstrumentBody::kWidth * initialScale), (int) std::round (InstrumentBody::kHeight * initialScale));
+    sizeReady = true;
+    resized();
 }
 
 RecklessChronosEditor::~RecklessChronosEditor()
@@ -321,5 +323,6 @@ void RecklessChronosEditor::resized()
 {
     const float s = (float) getWidth() / (float) InstrumentBody::kWidth;
     body.setTransform (juce::AffineTransform::scale (s));
-    proc.uiScale = s;
+    if (sizeReady)
+        proc.uiScale = s;
 }

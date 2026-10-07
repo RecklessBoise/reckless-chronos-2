@@ -145,7 +145,7 @@ struct TwinEngine
             o1.adv (inc1); o2.adv (inc2);
             float s = (1.0f - mix) * a + mix * b;
             s = fastTanh (s * scream) / std::sqrt (scream);
-            out[i] = hpf.hp (s) * 0.55f;
+            out[i] = hpf.hp (s) * 0.42f;
         }
     }
 };
@@ -205,7 +205,7 @@ struct PolyEngine
             s += subLvl * sub.pulse (incSub, 0.5f);
             sub.adv (incSub);
             s += noise * rng.next();
-            out[i] = s * 0.5f;
+            out[i] = s * 0.35f;
         }
     }
 };
@@ -237,7 +237,7 @@ struct FmEngine
             { 0, 0, 0, 0 },                    // additive
         };
         static const uint8_t carriers[8] = { 0b0001, 0b0001, 0b0001, 0b0101, 0b0111, 0b1101, 0b1001, 0b1111 };
-        static const float ratios[] = { 0.5f, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14 };
+        static const float ratios[] = { 0.5f, 1.0f, 1.41f, 2.0f, 2.76f, 3.0f, 3.5f, 4.0f, 5.0f, 5.4f, 6.0f, 7.0f, 7.13f, 8.0f, 9.0f, 11.0f, 14.0f };
 
         const int algo = pickIndex (p[tpE1], 8);
         const float r[4] = { 1.0f, pick (ratios, p[tpE2]), pick (ratios, p[tpE4]), 1.0f };
@@ -274,7 +274,7 @@ struct FmEngine
             float sum = 0.0f;
             for (int op = 0; op < 4; ++op)
                 if (cmask & (1 << op)) sum += o[op];
-            out[s] = sum * cgain * 0.5f;
+            out[s] = sum * cgain * 0.42f;
         }
         t += (float) n / sr;
     }
@@ -470,7 +470,7 @@ struct DrumEngine
     {
         static const float metal[6] = { 205.3f, 304.4f, 369.6f, 522.7f, 540.0f, 800.0f };
         const float noiseCol = p[tpE8];
-        const float gain = 0.25f + 0.85f * vel;
+        const float gain = (0.25f + 0.85f * vel) * 0.85f;
         float peak = 0.0f;
 
         for (int i = 0; i < n; ++i)
@@ -615,7 +615,7 @@ struct OrganEngine
             }
             s += clickFlt.bp (rng.next()) * clickEnv * 0.25f;
             clickEnv *= clickDec;
-            out[i] = s * 0.7f;
+            out[i] = s * 0.36f;
         }
     }
 };
@@ -691,7 +691,7 @@ struct PluckEngine
             pickEnv *= pickDec;
             if (bodyLvl > 0.0f)
                 s += bodyLvl * (body1.tick (y) * 1.2f + body2.tick (y) * 0.9f + body3.tick (y) * 0.6f);
-            out[i] = s * 0.8f;
+            out[i] = s * 1.75f;
             peak = std::max (peak, std::abs (s));
         }
         t += (float) n / sr;
@@ -760,7 +760,7 @@ struct EPianoEngine
             phM += incM; if (phM >= 1.0f) phM -= 1.0f;
             phB += incB; if (phB >= 1.0f) phB -= 1.0f;
             t += dt;
-            const float o = x * tremAmp * 0.7f;
+            const float o = x * tremAmp * 0.4f;
             out[i] = o;
             peak = std::max (peak, std::abs (o));
         }
@@ -793,7 +793,7 @@ struct PianoEngine
         const float hard = clamp01 (p[tpE1] * (1.0f - velTone + velTone * vel * 1.25f));
         const float pw = 2.4f - 1.8f * hard;               // spectral tilt
         const float t60Base = (0.3f + 1.6f * p[tpE2]) * 14.0f * std::exp2 (-(note - 21.0f) / 22.0f);
-        const float cents = p[tpE3] * 3.0f;
+        const float cents = p[tpE3] * 3.0f + 22.0f * std::pow (p[tpE3], 4.0f);
         const float dA = std::exp2 (cents / 1200.0f), dB = std::exp2 (-cents / 1200.0f);
 
         nOsc = 0;
@@ -821,7 +821,7 @@ struct PianoEngine
             }
             sumA += a;
         }
-        const float norm = 0.55f / std::max (0.3f, sumA);
+        const float norm = 0.82f / std::max (0.3f, sumA);
         for (int i = 0; i < nOsc; ++i) amp[i] *= norm;
         level = 1.0f;
 

@@ -114,15 +114,15 @@ void Voice::renderBlock (float* L, float* R, int n, const RenderCtx& ctx)
     voiceTime += dt;
 
     // pitch
-    const float ctlVib = ctx.modWheel * p[tpWheelVib] * 0.6f + ctx.aftertouch * p[tpAtVib] * 0.6f;
-    const float pitch = curNote + p[tpTranspose] + p[tpFine] * 0.01f + ctx.bendSemis
-                      + lfoFaded * p[tpLfoPitch] * 2.0f + lfoVal * ctlVib;
-    const float freq = std::min (mtof (pitch), sr * 0.45f);
-
-    // envelopes (filter env at control rate)
+    // envelopes (filter env at control rate, also drives the pitch EG)
     ampEnv.set (p[tpAA], p[tpAD], p[tpAS], p[tpAR]);
     fltEnv.set (p[tpFA], p[tpFD], p[tpFS], p[tpFR]);
     const float fe = fltEnv.advance (n);
+
+    const float ctlVib = ctx.modWheel * p[tpWheelVib] * 0.6f + ctx.aftertouch * p[tpAtVib] * 0.6f;
+    const float pitch = curNote + p[tpTranspose] + p[tpFine] * 0.01f + ctx.bendSemis
+                      + lfoFaded * p[tpLfoPitch] * 2.0f + lfoVal * ctlVib + p[tpPitchEg] * fe * 24.0f;
+    const float freq = std::clamp (mtof (pitch), 8.0f, sr * 0.45f);
 
     // engine
     switch (engine)

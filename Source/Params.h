@@ -29,7 +29,7 @@ enum TP
 {
     tpEngine = 0,
     tpE1, tpE2, tpE3, tpE4, tpE5, tpE6, tpE7, tpE8,
-    tpTranspose, tpFine, tpVoiceMode, tpGlide, tpUnison, tpDetune, tpPbRange,
+    tpTranspose, tpFine, tpVoiceMode, tpGlide, tpUnison, tpDetune, tpPbRange, tpPitchEg,
     tpFltType, tpCutoff, tpReso, tpFltEnv, tpFltKey, tpFltVel, tpDrive,
     tpFA, tpFD, tpFS, tpFR,
     tpAA, tpAD, tpAS, tpAR, tpAmpVel,

@@ -50,6 +50,7 @@ const std::vector<ParamSpec>& timbreSpecs()
         I ("unison", "Unison", 1, 4, 1);
         F ("detune", "Unison Detune", 0, 1, 0.2f);
         I ("pbRange", "Bend Range", 0, 12, 2);
+        F ("pitchEg", "Pitch EG Int", -1, 1, 0);
         C ("fltType", "Filter Type", { "Off", "LP12", "LP24", "Ladder", "MS-LP", "BP", "HP" }, (float) fltLP24);
         F ("cutoff", "Cutoff", 20, 20000, 8000, 1000);
         F ("reso", "Resonance", 0, 1, 0.1f);
@@ -182,7 +183,7 @@ static std::function<juce::String (float, int)> formatterFor (const juce::String
             const int p = (int) std::round (v * 100.0f);
             return p == 0 ? juce::String ("C") : (p < 0 ? "L" + juce::String (-p) : "R" + juce::String (p));
         };
-    if (id == "fltEnv" || id.startsWith ("rt") || id == "vecX" || id == "vecY") return bip;
+    if (id == "fltEnv" || id == "pitchEg" || id.startsWith ("rt") || id == "vecX" || id == "vecY") return bip;
     return pct;
 }
 

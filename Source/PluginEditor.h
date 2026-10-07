@@ -55,4 +55,5 @@ private:
     RecklessChronosProcessor& proc;
     rc::ui::RcLookAndFeel lnf;
     InstrumentBody body;
+    bool sizeReady = false;
 };

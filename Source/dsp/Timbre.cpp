@@ -186,6 +186,7 @@ void Timbre::setSustain (bool down)
 void Timbre::allNotesOff (bool hard)
 {
     stackSize = 0;
+    if (hard) lastNote = -1.0f;
     sustainDown = false;
     for (auto& v : voices)
     {
