@@ -1,0 +1,8 @@
+build/
+build-*/
+wav/
+shots/
+.DS_Store
+*.user
+.vs/
+.vscode/

@@ -1,0 +1,101 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (universal binary)
+        run: cmake -B build -G Xcode -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Render tests (all presets)
+        run: ./build/RC2Tests_artefacts/Release/RC2Tests --pitch
+
+      - name: Validate AU (auval)
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R "build/RecklessChronos2_artefacts/Release/AU/Reckless Chronos 2.component" ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar || true
+          auval -v aumu Rch2 Rckl
+
+      - name: Load VST3 + AU through the JUCE host
+        run: |
+          ./build/RC2Tests_artefacts/Release/RC2Tests --host "build/RecklessChronos2_artefacts/Release/VST3/Reckless Chronos 2.vst3"
+          ./build/RC2Tests_artefacts/Release/RC2Tests --host ~/Library/Audio/Plug-Ins/Components/"Reckless Chronos 2.component"
+
+      - name: Validate VST3 (pluginval)
+        run: |
+          curl -L -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          unzip -q pluginval.zip
+          ./pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --skip-gui-tests --validate-in-process \
+            "build/RecklessChronos2_artefacts/Release/VST3/Reckless Chronos 2.vst3"
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          cd build/RecklessChronos2_artefacts/Release
+          ditto -c -k --keepParent "VST3/Reckless Chronos 2.vst3" "$GITHUB_WORKSPACE/dist/RecklessChronos2-macOS-VST3.zip"
+          ditto -c -k --keepParent "AU/Reckless Chronos 2.component" "$GITHUB_WORKSPACE/dist/RecklessChronos2-macOS-AU.zip"
+          ditto -c -k --keepParent "Standalone/Reckless Chronos 2.app" "$GITHUB_WORKSPACE/dist/RecklessChronos2-macOS-Standalone.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RecklessChronos2-macOS
+          path: dist/*.zip
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Render tests (all presets)
+        run: .\build\RC2Tests_artefacts\Release\RC2Tests.exe
+
+      - name: Load VST3 through the JUCE host
+        run: .\build\RC2Tests_artefacts\Release\RC2Tests.exe --host "build\RecklessChronos2_artefacts\Release\VST3\Reckless Chronos 2.vst3"
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path "build/RecklessChronos2_artefacts/Release/VST3/Reckless Chronos 2.vst3" -DestinationPath dist/RecklessChronos2-Windows-VST3.zip
+          Compress-Archive -Path "build/RecklessChronos2_artefacts/Release/Standalone/Reckless Chronos 2.exe" -DestinationPath dist/RecklessChronos2-Windows-Standalone.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RecklessChronos2-Windows
+          path: dist/*.zip
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true

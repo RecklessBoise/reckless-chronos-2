@@ -1,0 +1,14 @@
+{"programs":[
+ {"name":"Init Analog","cat":"Fast Synth","p":{"engine":"Analog"}},
+ {"name":"Test Piano","cat":"Keyboard","p":{"engine":"Grand Piano","fltType":"Off","aR":0.4}},
+ {"name":"Test EP","cat":"Keyboard","p":{"engine":"Electric Piano","fltType":"Off"}},
+ {"name":"Test Wave","cat":"Strings","p":{"engine":"Wave ROM","e1":0.25,"e2":0.3}},
+ {"name":"Test Drums","cat":"Drums","p":{"engine":"Drum Kit","fltType":"Off"}},
+ {"name":"Test Organ","cat":"Organ","p":{"engine":"Tonewheel Organ","fltType":"Off","e1":1,"e2":1,"e3":1,"ifx1Type":"Rotary","ifx1Mix":1}},
+ {"name":"Test Pluck","cat":"Guitar/Plucked","p":{"engine":"Plucked String","fltType":"Off"}},
+ {"name":"Test FM","cat":"Bell/Mallet","p":{"engine":"FM Matrix","fltType":"Off"}},
+ {"name":"Test Twin","cat":"Lead Synth","p":{"engine":"Twin Filter","fltType":"MS-LP"}},
+ {"name":"Test Poly","cat":"Slow Synth","p":{"engine":"Vintage Poly"}}
+],"combis":[
+ {"name":"Test Combi","cat":"Keyboard","t":[{"prog":"Test Piano"},{"prog":"Test Wave","p":{"level":0.5}}]}
+]}
