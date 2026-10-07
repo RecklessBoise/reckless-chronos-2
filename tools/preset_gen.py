@@ -693,14 +693,14 @@ add(X, "Bubbles", analog(SINE, SINE, 0.5, 12, cutoff=4000, lfoPitch=1.0, lfoRate
 add(X, "Thunder", analog(SAW, SAW, 0.5, 0, noise=1.0, e5=0.0, fltType="LP24", cutoff=180, reso=0.3, fltEnv=0.6, fA=0.05, fD=3.0, fS=0.1, aA=0.05, aD=4.0, aS=0.0, aR=2.5, transpose=-24, send2=0.6))
 add(X, "Wind", analog(SINE, SINE, 0.0, 0, noise=1.0, fltType="BP", cutoff=900, reso=0.75, fltKey=0.8, lfoFilter=0.55, lfoRate=0.15, lfoDelay=0.0, aA=1.2, aR=2.5, send2=0.5))
 add(X, "Ocean Waves", analog(SINE, SINE, 0.0, 0, noise=1.0, fltType="LP12", cutoff=1200, lfoFilter=0.6, lfoAmp=0.7, lfoRate=0.12, lfoDelay=0.0, aA=2.0, aR=3.0, send2=0.55))
-add(X, "Rain", fx(drums(e5=0.1, e8=1.0, send2=0.6), "Lo-Fi", 0.2, 0.0, 0.0))
+add(X, "Rain", analog(SINE, SINE, 0.0, 0, noise=1.0, fltType="HP", cutoff=2500, reso=0.2, lfoAmp=0.9, lfoRate=16.0, lfoWave="S&H", lfoDelay=0.0, aA=0.8, aR=2.0, send2=0.55))
 add(X, "Radio Noise", fx(analog(SAW, SAW, 0.5, 0, noise=0.8, fltType="BP", cutoff=1800, reso=0.5, lfoFilter=0.3, lfoRate=6.0, lfoWave="S&H", lfoDelay=0.0), "Lo-Fi", 0.75, 0.6, 1.0))
 add(X, "Robot Voice", twin(w1=1, w2=3, pitch=5.0, mix=0.8, scream=0.3, fltType="BP", cutoff=1500, reso=0.6, voiceMode="Mono"))
 add(X, "Metal Hit", fm(a=5, r2=7.13, i2=0.8, r3=2.76, i3=0.7, fb=0.8, dec=0.4, aD=2.5, aS=0.0, aR=1.5, send2=0.5))
 add(X, "Glitch", fx(analog(SQR, SAW, 0.5, 19, cutoff=4000, lfoPitch=1.0, lfoRate=15.0, lfoWave="S&H", lfoDelay=0.0, aD=0.2, aS=0.0, aR=0.1), "Lo-Fi", 0.6, 0.7, 1.0))
 add(X, "Space Drone", fx(analog(SAW, SAW, 0.5, 7, fine=0.5, unison=4, detune=0.6, cutoff=600, reso=0.5, lfoFilter=0.4, lfoRate=0.08, lfoDelay=0.0, aA=3.0, aR=4.0, transpose=-12, send2=0.7, send1=0.35), "Phaser", 0.05, 0.6, 0.6))
 add(X, "Dark Drone", fm(a=1, r2=0.5, i2=0.5, r3=1.41, i3=0.3, fb=0.5, dec=6.0, aA=2.0, aR=4.0, transpose=-24, fltType="LP24", cutoff=900, send2=0.6))
-add(X, "Heartbeat", drums(e1=0.0, e2=0.25, e7=0.0, send2=0.3))
+add(X, "Heart Thump", analog(SINE, SINE, 0.5, 0, fltType="LP12", cutoff=400, pitchEg=-0.25, fA=0.001, fD=0.08, fS=0.0, aD=0.3, aS=0.0, aR=0.2, transpose=-24, send2=0.3))
 add(X, "Telephone", fx(wavep("BrightVox", "Square", 0.5, 0, fltType="BP", cutoff=1800, reso=0.3, aR=0.2), "Lo-Fi", 0.6, 0.4, 1.0))
 
 # ---- Hit / Arpg -----------------------------------------------------------------------------
