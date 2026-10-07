@@ -44,7 +44,7 @@ private:
     void startVoice (int note, float vel, bool legatoAllowed);
 
     float sr = 48000.0f;
-    std::array<Voice, kMaxVoices> voices;
+    std::vector<Voice> voices = std::vector<Voice> (kMaxVoices); // heap: ~17 KB per voice
     InsertFx ifx1, ifx2, ensemble;
     std::vector<float> bufL, bufR;
     uint64_t ageCounter = 0;

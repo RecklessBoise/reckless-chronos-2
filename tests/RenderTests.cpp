@@ -161,7 +161,8 @@ double pitchErrorCents (RecklessChronosProcessor& p)
 // Renders the editor to PNG files: <prefix>_<page>.png  (optional page list "0,1,2")
 int snapshot (const juce::String& prefix, const juce::String& what)
 {
-    RecklessChronosProcessor p;
+    auto procPtr = std::make_unique<RecklessChronosProcessor>();
+    auto& p = *procPtr;
     p.setPlayConfigDetails (0, 2, kSr, kBlock);
     p.prepareToPlay (kSr, kBlock);
     if (what.startsWith ("combi") && ! p.presets.combis().empty()) p.loadCombi (0);
@@ -305,7 +306,8 @@ static int runTests (int argc, char** argv)
     for (int i = 1; i < argc; ++i)
         if (juce::String (argv[i]) == "--pitch") checkPitch = true;
 
-    RecklessChronosProcessor p;
+    auto procPtr = std::make_unique<RecklessChronosProcessor>(); // large object: keep it off the stack
+    auto& p = *procPtr;
     p.setPlayConfigDetails (0, 2, kSr, kBlock);
     p.prepareToPlay (kSr, kBlock);
     std::cout << "Loaded " << p.presets.programs().size() << " programs, " << p.presets.combis().size() << " combis" << std::endl;

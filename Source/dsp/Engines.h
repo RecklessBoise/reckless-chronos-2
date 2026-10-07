@@ -650,11 +650,11 @@ struct PluckEngine
         // shaped noise burst: brightness lowpass + pluck position comb
         OnePole f;
         f.setLP (expMap (p[tpE2], 400.0f, 16000.0f) * (0.4f + 0.8f * vel), sr);
-        float tmp[4096];
-        for (int i = 0; i < exciteLen; ++i) tmp[i] = f.lp (rng.next());
+        for (int i = 0; i < exciteLen; ++i) excite[i] = f.lp (rng.next());
         const int pos = std::max (1, (int) ((0.05f + 0.45f * p[tpE1]) * (float) exciteLen));
-        for (int i = 0; i < exciteLen; ++i)
-            excite[i] = (tmp[i] - (i >= pos ? tmp[i - pos] : 0.0f)) * (0.3f + 0.9f * vel);
+        // pluck-position comb, computed backwards in place
+        for (int i = exciteLen - 1; i >= 0; --i)
+            excite[i] = (excite[i] - (i >= pos ? excite[i - pos] : 0.0f)) * (0.3f + 0.9f * vel);
         pickEnv = 1.0f;
         body1.bandpass (110.0f, 2.0f, sr); body2.bandpass (220.0f, 2.5f, sr); body3.bandpass (450.0f, 2.0f, sr);
         body1.reset(); body2.reset(); body3.reset();
