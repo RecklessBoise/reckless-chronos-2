@@ -31,6 +31,51 @@ PresetManager::PresetManager (juce::AudioProcessorValueTreeState& state) : apvts
 {
     loadFactory();
     scanUserPresets();
+    reloadFavorites();
+}
+
+static juce::String favKey (Mode mode, const juce::String& name)
+{
+    return (mode == Mode::Combi ? "C|" : "P|") + name;
+}
+
+void PresetManager::reloadFavorites()
+{
+    favorites.clear();
+    const auto v = juce::JSON::parse (favoritesFile());
+    if (auto* arr = v.getArray())
+        for (auto& item : *arr)
+            favorites.addIfNotAlreadyThere (item.toString());
+}
+
+void PresetManager::saveFavorites() const
+{
+    if (! userFolder().createDirectory()) return;
+    juce::Array<juce::var> arr;
+    for (auto& f : favorites) arr.add (f);
+    favoritesFile().replaceWithText (juce::JSON::toString (juce::var (arr)));
+}
+
+bool PresetManager::isFavorite (Mode mode, const juce::String& name) const
+{
+    return favorites.contains (favKey (mode, name));
+}
+
+void PresetManager::toggleFavorite (Mode mode, const juce::String& name)
+{
+    reloadFavorites(); // pick up likes made in other plugin instances
+    const auto key = favKey (mode, name);
+    if (favorites.contains (key)) favorites.removeString (key);
+    else favorites.add (key);
+    saveFavorites();
+}
+
+int PresetManager::numFavorites (Mode mode) const
+{
+    const auto prefix = mode == Mode::Combi ? "C|" : "P|";
+    int n = 0;
+    for (auto& f : favorites) n += f.startsWith (prefix) ? 1 : 0;
+    return n;
 }
 
 const juce::StringArray& PresetManager::programCategories()
@@ -203,6 +248,13 @@ void PresetManager::scanUserPresets()
 std::vector<int> PresetManager::programsInCategory (const juce::String& cat) const
 {
     std::vector<int> r;
+    if (cat == "Favorites")
+    {
+        for (auto& f : favorites)
+            if (f.startsWith ("P|"))
+                if (const int i = findProgram (f.substring (2)); i >= 0) r.push_back (i);
+        return r;
+    }
     for (int i = 0; i < (int) progs.size(); ++i)
         if ((cat == "User" && progs[(size_t) i].user) || (cat != "User" && ! progs[(size_t) i].user && progs[(size_t) i].category == cat))
             r.push_back (i);
@@ -212,6 +264,14 @@ std::vector<int> PresetManager::programsInCategory (const juce::String& cat) con
 std::vector<int> PresetManager::combisInCategory (const juce::String& cat) const
 {
     std::vector<int> r;
+    if (cat == "Favorites")
+    {
+        for (auto& f : favorites)
+            if (f.startsWith ("C|"))
+                for (int i = 0; i < (int) combs.size(); ++i)
+                    if (combs[(size_t) i].name == f.substring (2)) { r.push_back (i); break; }
+        return r;
+    }
     for (int i = 0; i < (int) combs.size(); ++i)
         if ((cat == "User" && combs[(size_t) i].user) || (cat != "User" && ! combs[(size_t) i].user && combs[(size_t) i].category == cat))
             r.push_back (i);

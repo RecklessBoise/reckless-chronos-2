@@ -197,7 +197,16 @@ int snapshot (const juce::String& prefix, const juce::String& what)
     if (auto* b = findButton (ed.get(), "FILTER / AMP")) { b->triggerClick(); save ("edit_filter"); }
     if (auto* b = findButton (ed.get(), "LFO / PITCH")) { b->triggerClick(); save ("edit_lfo"); }
     if (auto* pl = findButton (ed.get(), "PLAY")) { pl->triggerClick(); juce::MessageManager::getInstance()->runDispatchLoopUntil (50); }
-    if (auto* k = findButton (ed.get(), "KEYS")) { k->triggerClick(); save ("list"); }
+    {
+        const auto n0 = p.presets.programs()[0].name, n2 = p.presets.programs()[2].name;
+        const bool w0 = p.presets.isFavorite (rc::Mode::Program, n0), w2 = p.presets.isFavorite (rc::Mode::Program, n2);
+        if (! w0) p.presets.toggleFavorite (rc::Mode::Program, n0);
+        if (! w2) p.presets.toggleFavorite (rc::Mode::Program, n2);
+        if (auto* k = findButton (ed.get(), "KEYS")) { k->triggerClick(); save ("list"); }
+        if (auto* b = findButton (ed.get(), "< BANKS")) { b->triggerClick(); save ("grid_fav"); }
+        if (! w0) p.presets.toggleFavorite (rc::Mode::Program, n0);
+        if (! w2) p.presets.toggleFavorite (rc::Mode::Program, n2);
+    }
     ed->setSize (840, 350);
     save ("small");
     return 0;
@@ -347,6 +356,20 @@ static int runTests (int argc, char** argv)
         double ms = 0;
         if (! playOne (p, "C" + juce::String (i).paddedLeft ('0', 3) + " " + combs[(size_t) i].name, true, juce::File(), ms)) ++failures;
         if (ms > worst) { worst = ms; worstName = combs[(size_t) i].name; }
+    }
+
+    // favourites: like -> appears in the Favorites bank -> unlike (restores the user's file)
+    {
+        auto& pm = p.presets;
+        const auto name = progs[3].name;
+        const bool was = pm.isFavorite (rc::Mode::Program, name);
+        if (! was) pm.toggleFavorite (rc::Mode::Program, name);
+        const auto fav = pm.programsInCategory ("Favorites");
+        const bool listed = std::find (fav.begin(), fav.end(), 3) != fav.end();
+        if (! was) pm.toggleFavorite (rc::Mode::Program, name);
+        const bool restored = pm.isFavorite (rc::Mode::Program, name) == was;
+        std::cout << "Favorites: " << (listed && restored ? "ok" : "FAIL") << std::endl;
+        if (! (listed && restored)) ++failures;
     }
 
     // state round trip

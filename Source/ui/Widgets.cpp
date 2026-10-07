@@ -328,6 +328,25 @@ void Keyboard::drawBlackNote (int, juce::Graphics& g, juce::Rectangle<float> are
 }
 
 //==============================================================================
+juce::Path heartPath (juce::Rectangle<float> r)
+{
+    const float x = r.getX(), y = r.getY(), w = r.getWidth(), h = r.getHeight();
+    juce::Path p;
+    p.startNewSubPath (x + w * 0.5f, y + h);
+    p.cubicTo (x - w * 0.15f, y + h * 0.55f, x + w * 0.05f, y - h * 0.1f, x + w * 0.5f, y + h * 0.25f);
+    p.cubicTo (x + w * 0.95f, y - h * 0.1f, x + w * 1.15f, y + h * 0.55f, x + w * 0.5f, y + h);
+    p.closeSubPath();
+    return p;
+}
+
+void paintHeart (juce::Graphics& g, juce::Rectangle<float> r, bool filled, juce::Colour colour)
+{
+    const auto p = heartPath (r);
+    g.setColour (colour);
+    if (filled) g.fillPath (p);
+    else g.strokePath (p, juce::PathStrokeType (1.4f));
+}
+
 void paintWood (juce::Graphics& g, juce::Rectangle<float> r, bool leftSide)
 {
     juce::Path shape;

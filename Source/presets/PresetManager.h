@@ -63,6 +63,12 @@ public:
     void applyCombi (int index);
     void initProgram();
 
+    // Favourites ("liked" presets), shared by all instances through a file in the user folder
+    bool isFavorite (Mode mode, const juce::String& name) const;
+    void toggleFavorite (Mode mode, const juce::String& name);
+    void reloadFavorites();
+    int numFavorites (Mode mode) const;
+
     bool saveCurrent (Mode mode, const juce::String& name, const juce::String& category, juce::String& error);
 
     // Unknown parameter names met while parsing (should be empty)
@@ -87,5 +93,8 @@ private:
     std::vector<ProgramPreset> progs;
     std::vector<CombiPreset> combs;
     juce::StringArray errors;
+    juce::StringArray favorites; // "P|name" / "C|name", in the order they were liked
+    juce::File favoritesFile() const { return userFolder().getChildFile ("favorites.json"); }
+    void saveFavorites() const;
 };
 } // namespace rc

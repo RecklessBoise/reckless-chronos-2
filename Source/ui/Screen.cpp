@@ -91,12 +91,14 @@ public:
             b->onClick = [this, i] { openCategory (i); };
             addAndMakeVisible (b);
         }
-        for (auto* b : { &userBtn, &saveBtn, &initBtn, &backBtn })
+        for (auto* b : { &userBtn, &favBtn, &saveBtn, &initBtn, &backBtn })
         {
             styleScreenButton (*b);
             addAndMakeVisible (b);
         }
+        favBtn.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff8a2040));
         userBtn.onClick = [this] { openCategory (16); };
+        favBtn.onClick = [this] { openCategory (17); };
         initBtn.onClick = [this] { proc.presets.initProgram(); };
         backBtn.onClick = [this] { showGrid(); };
         search.setTextToShowWhenEmpty ("Search...", Colours::screenText.withAlpha (0.4f));
@@ -113,7 +115,8 @@ public:
         showGrid();
     }
 
-    std::function<void()> onSave;
+    std::function<void()> onSave, onFavoritesChanged;
+    static constexpr int kHeartW = 26;
 
     void refresh()
     {
@@ -124,6 +127,8 @@ public:
             const int n = (int) (combi ? proc.presets.combisInCategory (cats[i]) : proc.presets.programsInCategory (cats[i])).size();
             tiles[i]->setButtonText (cats[i] + "\n" + juce::String (n));
         }
+        favBtn.setButtonText (juce::String::fromUTF8 ("\xe2\x99\xa5 FAVORITES (")
+                              + juce::String (proc.presets.numFavorites (combi ? Mode::Combi : Mode::Program)) + ")");
         if (list.isVisible()) rebuild();
     }
 
@@ -131,7 +136,7 @@ public:
     {
         category = cat;
         for (auto* t : tiles) t->setVisible (false);
-        userBtn.setVisible (false); initBtn.setVisible (false);
+        userBtn.setVisible (false); initBtn.setVisible (false); favBtn.setVisible (false);
         list.setVisible (true); backBtn.setVisible (true); catLabel.setVisible (true);
         rebuild();
         resized();
@@ -142,7 +147,7 @@ public:
         category = -1;
         search.clear();
         for (auto* t : tiles) t->setVisible (true);
-        userBtn.setVisible (true); initBtn.setVisible (true);
+        userBtn.setVisible (true); initBtn.setVisible (true); favBtn.setVisible (true);
         list.setVisible (false); backBtn.setVisible (false); catLabel.setVisible (false);
         refresh();
         resized();
@@ -161,6 +166,8 @@ public:
             initBtn.setBounds (bottom.removeFromLeft (70));
             bottom.removeFromLeft (4);
             userBtn.setBounds (bottom.removeFromLeft (70));
+            bottom.removeFromLeft (4);
+            favBtn.setBounds (bottom.removeFromLeft (130));
             const int w = r.getWidth() / 4, h = r.getHeight() / 4;
             for (int i = 0; i < 16; ++i)
                 tiles[i]->setBounds (r.getX() + (i % 4) * w, r.getY() + (i / 4) * h, w - 3, h - 3);
@@ -188,18 +195,32 @@ public:
         g.setColour (current ? Colours::accent.withAlpha (0.9f) : selected ? Colours::screenAcc.withAlpha (0.5f)
                      : (row % 2 ? juce::Colour (0xff131a26) : juce::Colour (0xff0f151f)));
         g.fillRect (0, 0, w, h);
+        const bool fav = proc.presets.isFavorite (combi ? Mode::Combi : Mode::Program, name);
+        paintHeart (g, { 8.0f, (float) h * 0.5f - 6.0f, 13.0f, 12.0f }, fav,
+                    fav ? juce::Colour (0xffff4d6d) : (current ? juce::Colours::black.withAlpha (0.35f) : Colours::screenText.withAlpha (0.25f)));
         g.setColour (current ? juce::Colours::black : Colours::screenText);
         g.setFont (font (13.0f, current));
-        g.drawText (juce::String (idx).paddedLeft ('0', 3) + "  " + name, 8, 0, w - 140, h, juce::Justification::centredLeft);
+        g.drawText (juce::String (idx).paddedLeft ('0', 3) + "  " + name, kHeartW + 4, 0, w - 140 - kHeartW, h, juce::Justification::centredLeft);
         g.setFont (font (10.5f));
         g.setColour (current ? juce::Colours::black.withAlpha (0.7f) : Colours::screenText.withAlpha (0.45f));
         g.drawText (cat, w - 136, 0, 128, h, juce::Justification::centredRight);
     }
 
-    void listBoxItemClicked (int row, const juce::MouseEvent&) override
+    void listBoxItemClicked (int row, const juce::MouseEvent& e) override
     {
         if (row < 0 || row >= (int) items.size()) return;
         const int idx = items[(size_t) row];
+        if (e.x < kHeartW)
+        {
+            // click on the heart: like / unlike without loading
+            const bool combi = proc.mode.load() == (int) Mode::Combi;
+            const auto& name = combi ? proc.presets.combis()[(size_t) idx].name : proc.presets.programs()[(size_t) idx].name;
+            proc.presets.toggleFavorite (combi ? Mode::Combi : Mode::Program, name);
+            if (category == 17) rebuild();
+            if (onFavoritesChanged) onFavoritesChanged();
+            list.repaint();
+            return;
+        }
         if (proc.mode.load() == (int) Mode::Combi) proc.loadCombi (idx);
         else proc.loadProgram (idx);
         list.repaint();
@@ -221,7 +242,7 @@ private:
                 if (name.containsIgnoreCase (q)) items.push_back (i);
             }
             catLabel.setText ("Search: " + q, juce::dontSendNotification);
-            if (category < 0) { for (auto* t : tiles) t->setVisible (false); list.setVisible (true); backBtn.setVisible (true); catLabel.setVisible (true); category = 99; resized(); }
+            if (category < 0) openCategory (99);
         }
         else if (category >= 0 && category < 16)
         {
@@ -233,13 +254,19 @@ private:
             items = combi ? proc.presets.combisInCategory ("User") : proc.presets.programsInCategory ("User");
             catLabel.setText ("User (" + juce::String ((int) items.size()) + ")", juce::dontSendNotification);
         }
+        else if (category == 17)
+        {
+            items = combi ? proc.presets.combisInCategory ("Favorites") : proc.presets.programsInCategory ("Favorites");
+            catLabel.setText (juce::String::fromUTF8 ("\xe2\x99\xa5 Favorites (") + juce::String ((int) items.size()) + ")",
+                              juce::dontSendNotification);
+        }
         list.updateContent();
         list.repaint();
     }
 
     RecklessChronosProcessor& proc;
     juce::OwnedArray<juce::TextButton> tiles;
-    juce::TextButton userBtn { "USER" }, saveBtn { "SAVE" }, initBtn { "INIT" }, backBtn { "< BANKS" };
+    juce::TextButton userBtn { "USER" }, favBtn { "FAVORITES" }, saveBtn { "SAVE" }, initBtn { "INIT" }, backBtn { "< BANKS" };
     juce::TextEditor search;
     juce::ListBox list;
     juce::Label catLabel;
@@ -496,6 +523,10 @@ private:
                 sub.addItem (i + 1, proc.presets.programs()[(size_t) i].name);
             menu.addSubMenu (cats[c], sub);
         }
+        juce::PopupMenu favs;
+        for (int i : proc.presets.programsInCategory ("Favorites"))
+            favs.addItem (i + 1, proc.presets.programs()[(size_t) i].name);
+        menu.addSubMenu (juce::String::fromUTF8 ("\xe2\x99\xa5 Favorites"), favs);
         juce::PopupMenu user;
         for (int i : proc.presets.programsInCategory ("User"))
             user.addItem (i + 1, proc.presets.programs()[(size_t) i].name);
@@ -709,6 +740,7 @@ Screen::Screen (RecklessChronosProcessor& p) : proc (p)
     fx = std::make_unique<FxPage> (p);
     arp = std::make_unique<ArpPage> (p);
     play->saveBtn.onClick = [this] { openSaveDialog(); };
+    play->onFavoritesChanged = [this] { play->refresh(); repaint (nameArea); };
     for (juce::Component* c : { (juce::Component*) play.get(), (juce::Component*) edit.get(), (juce::Component*) mixer.get(),
                                 (juce::Component*) fx.get(), (juce::Component*) arp.get() })
         addChildComponent (c);
@@ -849,12 +881,23 @@ void Screen::timerCallback()
         shownVoices = v;
         repaint (headerArea.getUnion (nameArea));
     }
+    // likes can change in other instances / pages
+    if (++favPoll % 24 == 0) repaint (nameArea);
     edit->poll();
     for (int t = 0; t < kNumTimbres; ++t)
         timbreButtons[t]->setEnabled (m == (int) Mode::Combi || t == 0);
 }
 
-void Screen::mouseUp (const juce::MouseEvent&) {}
+void Screen::mouseUp (const juce::MouseEvent& e)
+{
+    if (heartArea.contains (e.position) && proc.currentPresetName.isNotEmpty())
+    {
+        const auto m = proc.mode.load() == (int) Mode::Combi ? Mode::Combi : Mode::Program;
+        proc.presets.toggleFavorite (m, proc.currentPresetName);
+        play->refresh();
+        repaint (nameArea);
+    }
+}
 
 void Screen::paint (juce::Graphics& g)
 {
@@ -888,8 +931,11 @@ void Screen::paint (juce::Graphics& g)
     g.drawText (cat.toUpperCase(), nb.reduced (8.0f, 2.0f), juce::Justification::topLeft);
     g.setColour (juce::Colours::black);
     g.setFont (font (20.0f, true));
-    g.drawFittedText (proc.currentPresetName, nb.reduced (8.0f, 2.0f).withTrimmedTop (9.0f).toNearestInt(),
+    heartArea = juce::Rectangle<float> (nb.getRight() - 34.0f, nb.getY() + 4.0f, 30.0f, nb.getHeight() - 8.0f);
+    g.drawFittedText (proc.currentPresetName, nb.reduced (8.0f, 2.0f).withTrimmedTop (9.0f).withTrimmedRight (36.0f).toNearestInt(),
                       juce::Justification::centredLeft, 1);
+    const bool fav = proc.presets.isFavorite (combi ? Mode::Combi : Mode::Program, proc.currentPresetName);
+    paintHeart (g, heartArea.withSizeKeepingCentre (22.0f, 19.0f), fav, fav ? juce::Colour (0xffd0103a) : juce::Colours::black.withAlpha (0.55f));
     // tab bar background
     g.setColour (juce::Colour (0xff0a0d13));
     g.fillRect (tabArea);

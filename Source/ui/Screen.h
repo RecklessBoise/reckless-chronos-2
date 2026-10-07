@@ -48,6 +48,8 @@ private:
     juce::String shownName;
     int shownMode = -1, shownVoices = -1;
     juce::Rectangle<int> headerArea, nameArea, tabArea, contentArea;
+    juce::Rectangle<float> heartArea;
+    int favPoll = 0;
     std::unique_ptr<juce::AlertWindow> saveWindow;
 };
 } // namespace rc::ui

@@ -38,7 +38,7 @@ Le design reprend le panneau de la workstation : joues en bois, potards et fader
 
 - **Taille réglable** : tire le coin en bas à droite (le ratio est conservé) ou utilise le bouton **SIZE**, de 50 % à 200 %. La taille est mémorisée avec le projet.
 - **Écran** : 5 pages.
-  - **PLAY** : banques par catégorie, liste et recherche, sauvegarde.
+  - **PLAY** : banques par catégorie, liste et recherche, favoris ♥, sauvegarde.
   - **EDIT** : moteur, filtre et amplitude, LFO et hauteur.
   - **MIXER** : 4 timbres.
   - **FX** : effets d'insertion et effets master.
@@ -57,6 +57,8 @@ Le design reprend le panneau de la workstation : joues en bois, potards et fader
 | Keyboard, Organ, Bell/Mallet, Strings, Vocal/Airy, Brass, Woodwind/Reed, Guitar/Plucked, Bass, Slow Synth, Fast Synth, Lead Synth, Motion Synth, SE, Hit/Arpg, Drums | Keyboard, Organ, Bell/Mallet, Strings, Pads, Brass/Reed, Orchestral, World, Guitar, Bass Splits, Synth, Lead, Motion, SE/Hits, Arpeggio, Drums/Splits |
 
 Les presets sont générés par [`tools/preset_gen.py`](tools/preset_gen.py) à partir d'environ 250 recettes écrites à la main. Chaque recette est déclinée en variantes (Hall, Room, Chorus, Drive, Glide, Dark, Bright…), et les niveaux sont équilibrés automatiquement à partir d'une mesure de loudness.
+
+**Favoris** : clique sur le **♥** dans la barre du nom ou devant un preset dans une liste. La banque **♥ FAVORITES** de la page PLAY rassemble tous tes presets likés (Programs et Combis séparément), dans l'ordre où tu les as likés. On les retrouve aussi dans le menu d'assignation du MIXER. Les likes sont enregistrés dans `favorites.json`, dans le dossier utilisateur ci-dessous, et partagés entre toutes les instances du plugin.
 
 Tes propres presets (bouton **SAVE**) sont enregistrés ici :
 - macOS : `~/Library/Audio/Presets/Reckless/Reckless Chronos 2/`

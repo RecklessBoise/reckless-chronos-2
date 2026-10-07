@@ -128,6 +128,10 @@ private:
                         juce::Colour noteFillColour) override;
 };
 
+// Heart icon for favourites
+juce::Path heartPath (juce::Rectangle<float> r);
+void paintHeart (juce::Graphics&, juce::Rectangle<float> r, bool filled, juce::Colour colour);
+
 // Painting helpers
 void paintWood (juce::Graphics&, juce::Rectangle<float> r, bool leftSide);
 void paintBrushedPanel (juce::Graphics&, juce::Rectangle<float> r);
